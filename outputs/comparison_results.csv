@@ -1,0 +1,3 @@
+dataset,accuracy,counterfactual_feature,counterfactual_factor
+bank,0.9233333333333333,duration,0.5
+german,0.68,age,0.5
