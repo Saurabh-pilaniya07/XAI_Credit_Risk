@@ -6,7 +6,7 @@ def generate_counterfactual(model, sample):
     sample_df = pd.DataFrame([sample], columns=sample.index)
     original = model.predict(sample_df)[0]
 
-    for feature in sample.index:   # ✅ feature defined here
+    for feature in sample.index:
 
         for factor in [0.5, 1.5, 2]:
 
