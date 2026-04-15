@@ -1,16 +1,18 @@
 # Explainable AI & Fairness Analysis in Credit Decision Systems
 
+---
+
 ## Overview
 
-This project builds a **multi-dataset, explainable AI pipeline** to analyze how machine learning models make decisions in financial applications such as credit approval and marketing campaigns.
+This project develops a **multi-dataset explainable AI pipeline** to analyze how machine learning models make decisions in financial applications such as credit approval and marketing campaigns.
 
-It integrates:
+The system integrates:
 
-* **Fairness analysis** (bias detection & mitigation)
-* **Explainability methods** (SHAP, LIME)
-* **Counterfactual reasoning** (decision boundary analysis)
+* Fairness analysis (bias detection and implications)
+* Explainability techniques (SHAP, LIME)
+* Counterfactual reasoning (decision boundary analysis)
 
-The system is evaluated across two datasets:
+The pipeline is evaluated across two datasets:
 
 * German Credit Dataset (benchmark fairness dataset)
 * Bank Marketing Dataset (real-world behavioral dataset)
@@ -19,150 +21,192 @@ The system is evaluated across two datasets:
 
 ## Objectives
 
-* Detect and analyze bias in credit decision models
+* Analyze bias and fairness risks in credit decision systems
 * Understand model behavior using explainability techniques
-* Identify decision-driving features using counterfactuals
-* Compare results across multiple datasets
-* Evaluate trade-offs between fairness, accuracy, and interpretability
+* Identify decision-driving features through counterfactual analysis
+* Compare model behavior across datasets
+* Examine trade-offs between interpretability, fairness, and performance
 
 ---
 
 ## Datasets
 
-### 1. German Credit Dataset
+### German Credit Dataset (https://raw.githubusercontent.com/selva86/datasets/master/GermanCredit.csv)
 
 * Benchmark dataset widely used in fairness research
-* Focus: credit risk prediction
+* Task: credit risk prediction
 * Key features: age, amount, duration, employment
 
-### 2. Bank Marketing Dataset
+---
+
+### Bank Marketing Dataset (https://raw.githubusercontent.com/selva86/datasets/master/bank-full.csv)
 
 * Real-world dataset from banking campaigns
-* Focus: customer response prediction
+* Task: customer response prediction
 * Key features: duration, campaign, macroeconomic indicators
 
 ---
 
 ## Methodology
 
-### 1. Model
+### Model
 
 * Random Forest Classifier
-* Trained separately on each dataset
+* Trained independently on each dataset
+* Ensures controlled and comparable evaluation
 
 ---
 
-### 2. Explainability
+### Explainability Techniques
 
-#### 🔹 SHAP (Global + Local)
+#### SHAP (Global + Local)
 
-* Identifies overall feature importance
-* Explains how features impact predictions
+* Identifies global feature importance
+* Explains contribution of features to predictions
 
-#### 🔹 LIME (Local Explanation)
+#### LIME (Local Explanation)
 
 * Explains individual predictions
-* Output saved as interactive HTML reports
+* Outputs stored as `.html` files
 
-#### 🔹 Counterfactual Explanations
+#### Counterfactual Explanations
 
-* Identifies minimal feature changes required to flip decisions
-* Reveals decision-sensitive features
+* Identifies minimal feature changes to flip predictions
+* Reveals decision sensitivity and boundary behavior
 
 ---
 
-### 3. Multi-Dataset Evaluation
+### Multi-Dataset Evaluation
 
-Each dataset is processed independently using the same pipeline to ensure:
+Each dataset is processed using the same pipeline to ensure:
 
 * Controlled experimentation
 * Comparable results
-* Robust validation
+* Robust analysis across domains
 
 ---
 
 ## Results
 
-| Dataset | Accuracy | Counterfactual Feature | Factor |
-| ------- | -------- | ---------------------- | ------ |
-| Bank    | 0.923    | duration               | 0.5    |
-| German  | 0.680    | age                    | 0.5    |
+| Dataset        | Accuracy | Primary Decision Driver | Type        |
+| -------------- | -------- | ----------------------- | ----------- |
+| Bank Marketing | 0.923    | duration                | Behavioral  |
+| German Credit  | 0.680    | age                     | Demographic |
 
 ---
 
-## Key Insights
+## SHAP Explainability Visualizations
 
-### 1. Dataset-Dependent Decision Drivers
+### German Credit Dataset — Feature Importance
 
-* German Dataset → **age** (demographic factor)
-* Bank Dataset → **duration** (behavioral factor)
+Age is the dominant decision driver, representing a protected demographic attribute.
 
-Model decisions vary significantly depending on dataset context.
-
----
-
-### 2. Sensitivity Near Decision Boundary
-
-* Small feature changes (×0.5) flipped predictions
-* Indicates proximity to decision boundary
+![SHAP German](outputs/shap_german.png)
 
 ---
 
-### 3. Fairness Implications
+### Bank Marketing Dataset — Feature Importance
 
-* Age-based influence may introduce **demographic bias risks**
-* Raises concerns about ethical deployment in financial systems
+Duration (call length) is the dominant driver, reflecting user behavior.
 
----
-
-### 4. Operational Insights
-
-* Duration reflects **customer engagement quality**
-* Provides actionable business insight
+![SHAP Bank](outputs/shap_bank.png)
 
 ---
 
-### 5. Explainability is Multi-Dimensional
+## Key Observation
 
-No single method is sufficient:
+The two datasets exhibit fundamentally different decision patterns:
 
-| Method         | Insight              |
-| -------------- | -------------------- |
-| SHAP           | Global importance    |
-| LIME           | Local reasoning      |
-| Counterfactual | Decision sensitivity |
+* German Credit → decisions driven by **who the individual is (age)**
+* Bank Marketing → decisions driven by **what the individual does (behavior)**
 
----
-
-## Limitations
-
-* Counterfactuals depend on perturbation strategy
-* LIME explanations may vary across runs
-* SHAP assumes feature independence
-* Results depend on dataset characteristics
+This distinction directly affects fairness risk assessment.
 
 ---
 
-## Ethical Considerations
+## Cross-Dataset Analysis: Why Decision Drivers Differ
 
-* Explainability does not guarantee fairness
-* Sensitive features (e.g., age) require careful handling
-* Responsible AI must balance:
+### Core Finding
 
-  * Accuracy
-  * Fairness
-  * Transparency
+| Dataset        | Top Feature | Feature Type             | Fairness Risk |
+| -------------- | ----------- | ------------------------ | ------------- |
+| German Credit  | age         | Demographic (protected)  | High          |
+| Bank Marketing | duration    | Behavioral (unprotected) | Low           |
 
 ---
 
-## Policy Relevance
+### Interpretation
 
-This project aligns with **responsible AI principles** and supports:
+**German Credit → Age-Driven Decisions**
+The model relies on a protected demographic attribute (age) for decision-making.
+Even if predictive, this introduces potential discrimination risk under:
 
-* Bias monitoring in financial systems
-* Transparent decision-making
-* Compliance with regulations such as the EU AI Act
+* EU AI Act (high-risk systems)
+* GDPR (sensitive data considerations)
 
+---
+
+**Bank Marketing → Duration-Driven Decisions**
+Call duration reflects user engagement and behavioral patterns.
+This signal is not inherently linked to demographic identity, making it a lower fairness-risk factor.
+
+---
+
+### Research Question
+
+> Does dataset context determine fairness risk more than the algorithm itself?
+
+If true, fairness evaluation must be:
+
+* Domain-specific
+* Context-aware
+* Not limited to generic technical metrics
+
+---
+
+### Why Explainability Alone Is Not Enough
+
+Explainability methods (e.g., SHAP) reveal:
+
+* Which features influence decisions
+
+However, they do not determine:
+
+* Whether those decisions are ethically acceptable
+
+This requires integration with:
+
+* Policy frameworks
+* Ethical reasoning
+* Domain knowledge
+
+---
+
+## Outputs
+
+* SHAP plots (`outputs/`) — committed to repository
+* LIME explanations — generated locally as `.html` files (not tracked due to size)
+* Counterfactual analysis results
+* Multi-dataset comparison CSV
+
+---
+
+## Configuration
+
+All pipeline settings are controlled through `config.py`.
+
+This allows modification of datasets, model behavior, and explainability parameters without altering core logic.
+
+### Configuration Parameters
+
+| Parameter               | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `DATASETS`              | Datasets to run (`german`, `bank`)              |
+| `DATASET_CONFIG`        | Dataset-specific settings (e.g., sampling size) |
+| `MODEL_CONFIG`          | Model hyperparameters                           |
+| `SPLIT_CONFIG`          | Train/test split settings                       |
+| `OUTPUT_CONFIG`         | Controls saving of outputs and visualizations   |
+| `EXPLAINABILITY_CONFIG` | Toggles SHAP, LIME, and counterfactual analysis |
 ---
 
 ## Tech Stack
@@ -178,7 +222,7 @@ This project aligns with **responsible AI principles** and supports:
 
 ## Project Structure
 
-```
+```id="8mkc7y"
 xai-multi-dataset/
 │
 ├── data/
@@ -195,38 +239,67 @@ xai-multi-dataset/
 
 ## How to Run
 
-```bash
+```bash id="t2yq3s"
 pip install -r requirements.txt
 python main.py
 ```
 
 ---
 
-## Outputs
+## Limitations
 
-* SHAP plots (`outputs/`)
-* LIME explanations (`.html` files)
-* Counterfactual analysis
-* Multi-dataset comparison CSV
+* Counterfactual explanations depend on perturbation strategy
+* LIME explanations may vary across runs
+* SHAP assumes feature independence
+* Results are dataset-dependent
 
 ---
 
-## Future Work
+## Ethical Considerations
 
-* Extend to additional datasets
-* Integrate causal fairness methods
-* Improve counterfactual generation (multi-feature optimization)
-* Add fairness-aware constraints in training
+* Explainability does not guarantee fairness
+* Sensitive attributes require careful handling
+* Responsible AI must balance:
+
+  * Accuracy
+  * Fairness
+  * Transparency
+
+---
+
+## Policy Relevance
+
+This project aligns with responsible AI principles and supports:
+
+* Bias monitoring in financial systems
+* Transparent decision-making
+* Compliance with regulations such as the EU AI Act
 
 ---
 
 ## Research Positioning
 
-This project shifts focus from:
+This work represents a shift from:
 
-> **Model performance → Model understanding**
+**Model performance → Model understanding and ethical evaluation**
 
-By combining fairness, explainability, and counterfactual reasoning, it demonstrates a **holistic approach to responsible AI systems**.
+It demonstrates that:
+
+* Model behavior varies across datasets
+* Explainability reveals decision logic
+* Fairness risks depend on feature usage
 
 ---
 
+## Conclusion
+
+Two models with similar performance can exhibit fundamentally different ethical risks depending on their decision drivers.
+
+* German Credit → High fairness risk (demographic reliance)
+* Bank Marketing → Lower fairness risk (behavioral reliance)
+
+This highlights the need for:
+
+* Context-aware AI evaluation
+* Domain-specific fairness assessment
+* Policy-aligned deployment of machine learning systems
