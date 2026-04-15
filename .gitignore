@@ -1,5 +1,8 @@
 venv/
 __pycache__/
 *.pyc
+*.pyo
 .ipynb_checkpoints/
+outputs/*.html
+.DS_Store
 .env
