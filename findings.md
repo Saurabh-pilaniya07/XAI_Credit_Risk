@@ -1,10 +1,17 @@
 # Research Findings: Explainable AI & Fairness in Credit Decision Systems
 
 ## Summary
-This project builds a multi-dataset XAI pipeline using SHAP, LIME, and 
-counterfactual analysis to understand how ML models make decisions in 
-financial contexts. The core finding is that decision drivers — and 
+This project builds a multi-dataset XAI pipeline using SHAP, LIME, and
+counterfactual analysis to understand how ML models make decisions in
+financial contexts. The core finding is that decision drivers — and
 therefore fairness risks — are fundamentally domain-dependent.
+
+**Dataset details:**
+
+| Dataset | Shape | Train/Test | Features | Test Accuracy | CV Accuracy | Test ROC-AUC |
+|---------|-------|-----------|----------|--------------|-------------|-------------|
+| German Credit | (1000, 16) | 800 / 200 | 16 (after preprocessing) | 0.695 | 0.690 ± 0.024 | 0.682 |
+| Bank Marketing | (1500, 10) | 1200 / 300 | 10 (after preprocessing) | 0.863 | 0.903 ± 0.008 | 0.831 |
 
 ---
 
@@ -22,16 +29,36 @@ It must be assessed at the domain + data + deployment context level.
 
 ---
 
-## Finding 2: Models Are Sensitive Near Decision Boundaries
+## Finding 2: Models Are Sensitive Near Decision Boundaries — German Credit Far More Than Bank
 
-A ×0.5 perturbation to the primary feature flipped predictions in both datasets:
-- Bank: halving `duration` changed the prediction
-- German: halving `age` changed the prediction
+The full counterfactual analysis (perturbation factors: ×0.3, ×0.5, ×0.7, ×0.9) revealed
+dramatically different boundary sensitivity between the two datasets:
 
-This indicates that many applicants sit close to the decision boundary — 
-meaning small real-world changes (one more year of age, a slightly 
-shorter call) can change outcomes. This is particularly concerning for 
-high-stakes financial decisions.
+**German Credit — Top decision-sensitive features:**
+
+| Feature | Factor | Flip Rate | Fairness Implication |
+|---------|--------|-----------|---------------------|
+| `amount` | ×0.3 | **38%** | Loan amount sits very close to boundary |
+| `age` | ×0.3 | **26%** | Protected attribute — high risk |
+| `amount` | ×0.5 | 22% | Sensitivity persists across mild perturbation |
+| `age` | ×0.5 | 20% | Age influence robust across factors |
+| `duration` | ×0.7 | 18% | Loan term also near boundary |
+
+**Bank Marketing — All features (much lower sensitivity):**
+
+| Max Flip Rate | Features | Interpretation |
+|--------------|---------|----------------|
+| **2%** | `age`, `duration`, `euribor3m`, `nr.employed` | Very robust — model is far from boundary |
+
+**The critical contrast:**
+German Credit's maximum flip rate (38%) is **19× higher** than Bank Marketing's (2%).
+This means German Credit decisions are structurally more fragile — small real-world
+changes in loan amount or applicant age can flip credit outcomes for nearly 4 in 10 applicants.
+
+This indicates that many applicants sit close to the decision boundary in German Credit —
+meaning small real-world changes (a slightly different loan amount, one more year of age)
+can change outcomes. This is particularly concerning for high-stakes financial decisions
+and directly relevant to EU AI Act Art. 14 (human oversight) requirements.
 
 ---
 
@@ -50,13 +77,23 @@ all three — and even then, the results require human and regulatory judgment.
 
 ## Finding 4: High Accuracy Does Not Mean Low Fairness Risk
 
-The Bank Marketing model achieved 0.923 accuracy while relying on 
-`duration` — a feature that could be manipulated (longer calls could 
-be gamed). The German model at 0.680 accuracy uses `age` — a protected 
-characteristic it should not rely on.
+| Dataset | Test Accuracy | CV Accuracy | ROC-AUC | Primary Feature | Fairness Risk |
+|---------|--------------|-------------|---------|-----------------|---------------|
+| Bank Marketing | **0.863** | 0.903 ± 0.008 | 0.831 | `duration` (behavioral) | Lower |
+| German Credit | **0.695** | 0.690 ± 0.024 | 0.682 | `age` (demographic) | **High** |
 
-Higher accuracy did not correlate with lower fairness risk. In fact, 
-the higher-accuracy model may be learning a spurious correlation.
+The Bank Marketing model achieves higher accuracy (test: 0.863, CV: 0.903) while
+relying on `duration` — a feature that could be **gamed** (longer calls could be
+artificially extended to inflate approval probability).
+
+The German Credit model at lower accuracy (test: 0.695, CV: 0.690) relies on `age`
+— a feature that is **immutable and protected**: applicants cannot change their age
+to receive a better credit decision. Age ranked 2nd in counterfactual sensitivity
+with a 26% flip rate at ×0.3 perturbation.
+
+Higher accuracy did not correlate with lower fairness risk. The higher-accuracy model
+(Bank Marketing) has a different failure mode — gameable features — while the
+lower-accuracy model (German Credit) has a worse failure mode — protected characteristic reliance.
 
 ---
 
